@@ -168,3 +168,35 @@ class I18nBackendSimpleTest < I18n::TestCase
     assert_equal 'baz', I18n.t('foo.bar', count: 1)
   end
 end
+
+class I18nBackendSimpleTestWithFallbacks < I18n::TestCase
+  class Backend < I18n::Backend::Simple
+    include I18n::Backend::Fallbacks
+  end
+
+  test "simple store_translations: store translations for unavailable locales if they're fallbacks for available locales" do
+    begin
+      I18n.enforce_available_locales = true
+      I18n.available_locales = [:'pt-BR']
+      I18n.fallbacks[:'pt-BR']
+      store_translations(:'pt-BR', :foo => {:bar => 'barpt-br'})
+      store_translations(:pt, :foo => {:bar => 'barpt', :baz => 'bazpt'})
+      assert_equal Hash[:foo, {:bar => 'barpt', :baz => 'bazpt'}], translations[:pt]
+    ensure
+      I18n.config.enforce_available_locales = false
+    end
+  end
+
+  test "simple store_translations: do not store translations for unavailable locales if they're not valid fallbacks" do
+    begin
+      I18n.enforce_available_locales = true
+      I18n.available_locales = [:'pt-BR']
+      I18n.fallbacks[:'pt-BR']
+      store_translations(:'pt-BR', :foo => {:bar => 'barpt-br'})
+      store_translations(:es, :foo => {:bar => 'bares', :baz => 'bazes'})
+      assert_nil translations[:es]
+    ensure
+      I18n.config.enforce_available_locales = false
+    end
+  end
+end

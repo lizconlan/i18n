@@ -37,8 +37,10 @@ module I18n
         def store_translations(locale, data, options = EMPTY_HASH)
           if I18n.enforce_available_locales &&
             I18n.available_locales_initialized? &&
-            !I18n.available_locales.include?(locale.to_sym) &&
-            !I18n.available_locales.include?(locale.to_s)
+            (!I18n.available_locales.include?(locale.to_sym) &&
+             !I18n.available_locales.include?(locale.to_s)) &&
+             (!I18n.fallbacks.values.flatten.uniq.include?(locale.to_sym) &&
+              !I18n.fallbacks.values.flatten.uniq.include?(locale.to_s))
             return data
           end
           locale = locale.to_sym
